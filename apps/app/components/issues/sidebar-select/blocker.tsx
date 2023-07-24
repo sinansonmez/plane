@@ -82,6 +82,11 @@ export const SidebarBlockerSelect: React.FC<Props> = ({
         handleClose={() => setIsBlockerModalOpen(false)}
         searchParams={{ blocker_blocked_by: true, issue_id: issueId }}
         handleOnSubmit={onSubmit}
+        primaryButton={{
+          loadingText: "Adding...",
+          defaultText: "Add selected issues",
+          buttonType: "primary",
+        }}
         workspaceLevelToggle
       />
       <div className="flex flex-wrap items-start py-2">

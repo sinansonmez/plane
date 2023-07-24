@@ -107,6 +107,11 @@ const SingleModule: React.FC = () => {
         handleClose={() => setModuleIssuesListModal(false)}
         searchParams={{ module: true }}
         handleOnSubmit={handleAddIssuesToModule}
+        primaryButton={{
+          loadingText: "Adding...",
+          defaultText: "Add selected issues",
+          buttonType: "primary",
+        }}
       />
       <ProjectAuthorizationWrapper
         breadcrumbs={

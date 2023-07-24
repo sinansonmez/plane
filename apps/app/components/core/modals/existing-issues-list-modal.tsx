@@ -13,7 +13,14 @@ import useToast from "hooks/use-toast";
 import useIssuesView from "hooks/use-issues-view";
 import useDebounce from "hooks/use-debounce";
 // ui
-import { Loader, PrimaryButton, SecondaryButton, ToggleSwitch, Tooltip } from "components/ui";
+import {
+  DangerButton,
+  Loader,
+  PrimaryButton,
+  SecondaryButton,
+  ToggleSwitch,
+  Tooltip,
+} from "components/ui";
 // icons
 import { LaunchOutlined } from "@mui/icons-material";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -34,6 +41,11 @@ type Props = {
   searchParams: Partial<TProjectIssuesSearchParams>;
   handleOnSubmit: (data: ISearchIssueResponse[]) => Promise<void>;
   workspaceLevelToggle?: boolean;
+  primaryButton: {
+    loadingText: string;
+    defaultText: string;
+    buttonType: "danger" | "primary";
+  };
 };
 
 export const ExistingIssuesListModal: React.FC<Props> = ({
@@ -42,6 +54,7 @@ export const ExistingIssuesListModal: React.FC<Props> = ({
   searchParams,
   handleOnSubmit,
   workspaceLevelToggle = false,
+  primaryButton,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [issues, setIssues] = useState<ISearchIssueResponse[]>([]);
@@ -310,9 +323,15 @@ export const ExistingIssuesListModal: React.FC<Props> = ({
                 {selectedIssues.length > 0 && (
                   <div className="flex items-center justify-end gap-2 p-3">
                     <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
-                    <PrimaryButton onClick={onSubmit} loading={isSubmitting}>
-                      {isSubmitting ? "Adding..." : "Add selected issues"}
-                    </PrimaryButton>
+                    {primaryButton.buttonType === "danger" ? (
+                      <DangerButton onClick={onSubmit} loading={isSubmitting}>
+                        {isSubmitting ? primaryButton.loadingText : primaryButton.defaultText}
+                      </DangerButton>
+                    ) : (
+                      <PrimaryButton onClick={onSubmit} loading={isSubmitting}>
+                        {isSubmitting ? primaryButton.loadingText : primaryButton.defaultText}
+                      </PrimaryButton>
+                    )}
                   </div>
                 )}
               </Dialog.Panel>

@@ -103,6 +103,11 @@ const SingleCycle: React.FC = () => {
         handleClose={() => setCycleIssuesListModal(false)}
         searchParams={{ cycle: true }}
         handleOnSubmit={handleAddIssuesToCycle}
+        primaryButton={{
+          loadingText: "Adding...",
+          defaultText: "Add selected issues",
+          buttonType: "primary",
+        }}
       />
       <ProjectAuthorizationWrapper
         breadcrumbs={
