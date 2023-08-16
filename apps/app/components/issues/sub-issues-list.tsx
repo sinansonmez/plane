@@ -9,6 +9,8 @@ import useSWR, { mutate } from "swr";
 import { Disclosure, Transition } from "@headlessui/react";
 // services
 import issuesService from "services/issues.service";
+// hooks
+import useToast from "hooks/use-toast";
 // contexts
 import { useProjectMyMembership } from "contexts/project-member.context";
 // components
@@ -38,6 +40,8 @@ export const SubIssuesList: FC<Props> = ({ parentIssue, user, disabled = false }
   const router = useRouter();
   const { workspaceSlug } = router.query;
 
+  const { setToastAlert } = useToast();
+
   const { memberRole } = useProjectMyMembership();
 
   const { data: subIssuesResponse } = useSWR(
@@ -56,6 +60,13 @@ export const SubIssuesList: FC<Props> = ({ parentIssue, user, disabled = false }
 
     await issuesService
       .addSubIssues(workspaceSlug as string, parentIssue.project, parentIssue.id, payload)
+      .then(() =>
+        setToastAlert({
+          title: "Success",
+          type: "success",
+          message: "Issues added successfully",
+        })
+      )
       .finally(() => mutate(SUB_ISSUES(parentIssue.id)));
   };
 

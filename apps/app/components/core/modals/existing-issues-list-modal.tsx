@@ -105,12 +105,6 @@ export const ExistingIssuesListModal: React.FC<Props> = ({
     }
 
     handleClose();
-
-    setToastAlert({
-      title: "Success",
-      type: "success",
-      message: `Issue${selectedIssues.length > 1 ? "s" : ""} added successfully`,
-    });
   };
 
   useEffect(() => {
