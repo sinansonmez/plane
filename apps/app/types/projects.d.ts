@@ -3,10 +3,11 @@ import type {
   IUserLite,
   IWorkspace,
   IWorkspaceLite,
+  IUserMemberLite,
   TIssueGroupByOptions,
   TIssueOrderByOptions,
   TIssueViewOptions,
-  TStateGroup,
+  TStateGroups,
 } from "./";
 
 export interface IProject {
@@ -39,12 +40,15 @@ export interface IProject {
   id: string;
   identifier: string;
   is_favorite: boolean;
+  is_member: boolean;
+  member_role: 5 | 10 | 15 | 20 | null;
   issue_views_view: boolean;
   module_view: boolean;
   name: string;
   network: number;
   page_view: boolean;
   project_lead: IUserLite | string | null;
+  sort_order: number | null;
   slug: string;
   total_cycles: number;
   total_members: number;
@@ -69,13 +73,21 @@ type ProjectViewTheme = {
   filters: IIssueFilterOptions;
 };
 
+type ProjectPreferences = {
+  pages: {
+    block_display: boolean;
+  };
+};
+
 export interface IProjectMember {
   id: string;
-  member: IUserLite;
+  member: IUserMemberLite;
   project: IProjectLite;
   workspace: IWorkspaceLite;
   comment: string;
   role: 5 | 10 | 15 | 20;
+
+  preferences: ProjectPreferences;
 
   view_props: ProjectViewTheme;
   default_props: ProjectViewTheme;
@@ -140,7 +152,7 @@ export interface ISearchIssueResponse {
   project__name: string;
   sequence_id: number;
   state__color: string;
-  state__group: TStateGroup;
+  state__group: TStateGroups;
   state__name: string;
   workspace__slug: string;
 }

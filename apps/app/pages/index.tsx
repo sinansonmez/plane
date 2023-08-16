@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import Image from "next/image";
 
@@ -22,6 +22,14 @@ import {
 import { Spinner } from "components/ui";
 // images
 import BluePlaneLogoWithoutText from "public/plane-logos/blue-without-text.png";
+// mobx react lite
+import { observer } from "mobx-react-lite";
+// mobx store
+import { useMobxStore } from "lib/mobx/store-provider";
+// next themes
+import { useTheme } from "next-themes";
+import { IUser } from "types";
+
 // types
 type EmailPasswordFormValues = {
   email: string;
@@ -29,10 +37,19 @@ type EmailPasswordFormValues = {
   medium?: string;
 };
 
-const HomePage: NextPage = () => {
+const HomePage: NextPage = observer(() => {
+  const store: any = useMobxStore();
+  const { setTheme } = useTheme();
+
   const { isLoading, mutateUser } = useUserAuth("sign-in");
 
   const { setToastAlert } = useToast();
+
+  const handleTheme = (user: IUser) => {
+    const currentTheme = user.theme.theme ?? "system";
+    setTheme(currentTheme);
+    store?.user?.setCurrentUserSettings();
+  };
 
   const handleGoogleSignIn = async ({ clientId, credential }: any) => {
     try {
@@ -43,7 +60,10 @@ const HomePage: NextPage = () => {
           clientId,
         };
         const response = await authenticationService.socialAuth(socialAuthPayload);
-        if (response && response?.user) mutateUser();
+        if (response && response?.user) {
+          mutateUser();
+          handleTheme(response?.user);
+        }
       } else {
         throw Error("Cant find credentials");
       }
@@ -66,7 +86,10 @@ const HomePage: NextPage = () => {
           clientId: process.env.NEXT_PUBLIC_GITHUB_ID,
         };
         const response = await authenticationService.socialAuth(socialAuthPayload);
-        if (response && response?.user) mutateUser();
+        if (response && response?.user) {
+          mutateUser();
+          handleTheme(response?.user);
+        }
       } else {
         throw Error("Cant find credentials");
       }
@@ -85,7 +108,10 @@ const HomePage: NextPage = () => {
       .emailLogin(formData)
       .then((response) => {
         try {
-          if (response) mutateUser();
+          if (response) {
+            mutateUser();
+            handleTheme(response?.user);
+          }
         } catch (err: any) {
           setToastAlert({
             type: "error",
@@ -109,7 +135,10 @@ const HomePage: NextPage = () => {
 
   const handleEmailCodeSignIn = async (response: any) => {
     try {
-      if (response) mutateUser();
+      if (response) {
+        mutateUser();
+        handleTheme(response?.user);
+      }
     } catch (err: any) {
       setToastAlert({
         type: "error",
@@ -178,6 +207,6 @@ const HomePage: NextPage = () => {
       )}
     </DefaultLayout>
   );
-};
+});
 
 export default HomePage;

@@ -332,7 +332,7 @@ class BulkImportIssuesEndpoint(BaseAPIView):
             # if there is no default state assign any random state
             if default_state is None:
                 default_state = State.objects.filter(
-                    ~Q(name="Triage"), sproject_id=project_id
+                    ~Q(name="Triage"), project_id=project_id
                 ).first()
 
             # Get the maximum sequence_id
@@ -458,7 +458,7 @@ class BulkImportIssuesEndpoint(BaseAPIView):
                         actor=request.user,
                         project_id=project_id,
                         workspace_id=project.workspace_id,
-                        comment=f"{request.user.email} importer the issue from {service}",
+                        comment=f"imported the issue from {service}",
                         verb="created",
                         created_by=request.user,
                     )

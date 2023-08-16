@@ -65,6 +65,8 @@ export const IssuesFilterView: React.FC = () => {
     orderBy,
     setOrderBy,
     showEmptyGroups,
+    showSubIssues,
+    setShowSubIssues,
     setShowEmptyGroups,
     filters,
     setFilters,
@@ -111,49 +113,51 @@ export const IssuesFilterView: React.FC = () => {
           ))}
         </div>
       )}
-      <SelectFilters
-        filters={filters}
-        onSelect={(option) => {
-          const key = option.key as keyof typeof filters;
+      {issueView !== "gantt_chart" && (
+        <SelectFilters
+          filters={filters}
+          onSelect={(option) => {
+            const key = option.key as keyof typeof filters;
 
-          if (key === "target_date") {
-            const valueExists = checkIfArraysHaveSameElements(
-              filters.target_date ?? [],
-              option.value
-            );
-
-            setFilters({
-              target_date: valueExists ? null : option.value,
-            });
-          } else {
-            const valueExists = filters[key]?.includes(option.value);
-
-            if (valueExists)
-              setFilters(
-                {
-                  [option.key]: ((filters[key] ?? []) as any[])?.filter(
-                    (val) => val !== option.value
-                  ),
-                },
-                !Boolean(viewId)
+            if (key === "target_date") {
+              const valueExists = checkIfArraysHaveSameElements(
+                filters.target_date ?? [],
+                option.value
               );
-            else
-              setFilters(
-                {
-                  [option.key]: [...((filters[key] ?? []) as any[]), option.value],
-                },
-                !Boolean(viewId)
-              );
-          }
-        }}
-        direction="left"
-        height="rg"
-      />
+
+              setFilters({
+                target_date: valueExists ? null : option.value,
+              });
+            } else {
+              const valueExists = filters[key]?.includes(option.value);
+
+              if (valueExists)
+                setFilters(
+                  {
+                    [option.key]: ((filters[key] ?? []) as any[])?.filter(
+                      (val) => val !== option.value
+                    ),
+                  },
+                  !Boolean(viewId)
+                );
+              else
+                setFilters(
+                  {
+                    [option.key]: [...((filters[key] ?? []) as any[]), option.value],
+                  },
+                  !Boolean(viewId)
+                );
+            }
+          }}
+          direction="left"
+          height="rg"
+        />
+      )}
       <Popover className="relative">
         {({ open }) => (
           <>
             <Popover.Button
-              className={`group flex items-center gap-2 rounded-md border border-custom-sidebar-border-200 bg-transparent px-3 py-1.5 text-xs hover:bg-custom-sidebar-background-90 hover:text-custom-sidebar-text-100 focus:outline-none duration-300 ${
+              className={`group flex items-center gap-2 rounded-md border border-custom-border-200 px-3 py-1.5 text-xs hover:bg-custom-sidebar-background-90 hover:text-custom-sidebar-text-100 focus:outline-none duration-300 ${
                 open
                   ? "bg-custom-sidebar-background-90 text-custom-sidebar-text-100"
                   : "text-custom-sidebar-text-200"
@@ -175,35 +179,48 @@ export const IssuesFilterView: React.FC = () => {
               <Popover.Panel className="absolute right-0 z-30 mt-1 w-screen max-w-xs transform rounded-lg border border-custom-border-200 bg-custom-background-90 p-3 shadow-lg">
                 <div className="relative divide-y-2 divide-custom-border-200">
                   <div className="space-y-4 pb-3 text-xs">
-                    {issueView !== "calendar" && issueView !== "spreadsheet" && (
-                      <>
+                    {issueView !== "calendar" &&
+                      issueView !== "spreadsheet" &&
+                      issueView !== "gantt_chart" && (
                         <div className="flex items-center justify-between">
                           <h4 className="text-custom-text-200">Group by</h4>
-                          <CustomMenu
-                            label={
-                              GROUP_BY_OPTIONS.find((option) => option.key === groupByProperty)
-                                ?.name ?? "Select"
-                            }
-                          >
-                            {GROUP_BY_OPTIONS.map((option) =>
-                              issueView === "kanban" && option.key === null ? null : (
-                                <CustomMenu.MenuItem
-                                  key={option.key}
-                                  onClick={() => setGroupByProperty(option.key)}
-                                >
-                                  {option.name}
-                                </CustomMenu.MenuItem>
-                              )
-                            )}
-                          </CustomMenu>
+                          <div className="w-28">
+                            <CustomMenu
+                              label={
+                                GROUP_BY_OPTIONS.find((option) => option.key === groupByProperty)
+                                  ?.name ?? "Select"
+                              }
+                              className="!w-full"
+                              buttonClassName="w-full"
+                            >
+                              {GROUP_BY_OPTIONS.map((option) => {
+                                if (issueView === "kanban" && option.key === null) return null;
+                                if (option.key === "project") return null;
+
+                                return (
+                                  <CustomMenu.MenuItem
+                                    key={option.key}
+                                    onClick={() => setGroupByProperty(option.key)}
+                                  >
+                                    {option.name}
+                                  </CustomMenu.MenuItem>
+                                );
+                              })}
+                            </CustomMenu>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-custom-text-200">Order by</h4>
+                      )}
+                    {issueView !== "calendar" && issueView !== "spreadsheet" && (
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-custom-text-200">Order by</h4>
+                        <div className="w-28">
                           <CustomMenu
                             label={
                               ORDER_BY_OPTIONS.find((option) => option.key === orderBy)?.name ??
                               "Select"
                             }
+                            className="!w-full"
+                            buttonClassName="w-full"
                           >
                             {ORDER_BY_OPTIONS.map((option) =>
                               groupByProperty === "priority" && option.key === "priority" ? null : (
@@ -219,40 +236,62 @@ export const IssuesFilterView: React.FC = () => {
                             )}
                           </CustomMenu>
                         </div>
-                      </>
+                      </div>
                     )}
                     <div className="flex items-center justify-between">
                       <h4 className="text-custom-text-200">Issue type</h4>
-                      <CustomMenu
-                        label={
-                          FILTER_ISSUE_OPTIONS.find((option) => option.key === filters.type)
-                            ?.name ?? "Select"
-                        }
-                      >
-                        {FILTER_ISSUE_OPTIONS.map((option) => (
-                          <CustomMenu.MenuItem
-                            key={option.key}
-                            onClick={() =>
-                              setFilters({
-                                type: option.key,
-                              })
-                            }
-                          >
-                            {option.name}
-                          </CustomMenu.MenuItem>
-                        ))}
-                      </CustomMenu>
+                      <div className="w-28">
+                        <CustomMenu
+                          label={
+                            FILTER_ISSUE_OPTIONS.find((option) => option.key === filters.type)
+                              ?.name ?? "Select"
+                          }
+                          className="!w-full"
+                          buttonClassName="w-full"
+                        >
+                          {FILTER_ISSUE_OPTIONS.map((option) => (
+                            <CustomMenu.MenuItem
+                              key={option.key}
+                              onClick={() =>
+                                setFilters({
+                                  type: option.key,
+                                })
+                              }
+                            >
+                              {option.name}
+                            </CustomMenu.MenuItem>
+                          ))}
+                        </CustomMenu>
+                      </div>
                     </div>
 
                     {issueView !== "calendar" && issueView !== "spreadsheet" && (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-custom-text-200">Show empty states</h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-custom-text-200">Show sub-issues</h4>
+                        <div className="w-28">
                           <ToggleSwitch
-                            value={showEmptyGroups}
-                            onChange={() => setShowEmptyGroups(!showEmptyGroups)}
+                            value={showSubIssues}
+                            onChange={() => setShowSubIssues(!showSubIssues)}
                           />
                         </div>
+                      </div>
+                    )}
+                    {issueView !== "calendar" &&
+                      issueView !== "spreadsheet" &&
+                      issueView !== "gantt_chart" && (
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-custom-text-200">Show empty states</h4>
+                          <div className="w-28">
+                            <ToggleSwitch
+                              value={showEmptyGroups}
+                              onChange={() => setShowEmptyGroups(!showEmptyGroups)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    {issueView !== "calendar" &&
+                      issueView !== "spreadsheet" &&
+                      issueView !== "gantt_chart" && (
                         <div className="relative flex justify-end gap-x-3">
                           <button type="button" onClick={() => resetFilterToDefault()}>
                             Reset to default
@@ -265,47 +304,48 @@ export const IssuesFilterView: React.FC = () => {
                             Set as default
                           </button>
                         </div>
-                      </>
-                    )}
+                      )}
                   </div>
 
-                  <div className="space-y-2 py-3">
-                    <h4 className="text-sm text-custom-text-200">Display Properties</h4>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {Object.keys(properties).map((key) => {
-                        if (key === "estimate" && !isEstimateActive) return null;
+                  {issueView !== "gantt_chart" && (
+                    <div className="space-y-2 py-3">
+                      <h4 className="text-sm text-custom-text-200">Display Properties</h4>
+                      <div className="flex flex-wrap items-center gap-2 text-custom-text-200">
+                        {Object.keys(properties).map((key) => {
+                          if (key === "estimate" && !isEstimateActive) return null;
 
-                        if (
-                          issueView === "spreadsheet" &&
-                          (key === "attachment_count" ||
-                            key === "link" ||
-                            key === "sub_issue_count")
-                        )
-                          return null;
+                          if (
+                            issueView === "spreadsheet" &&
+                            (key === "attachment_count" ||
+                              key === "link" ||
+                              key === "sub_issue_count")
+                          )
+                            return null;
 
-                        if (
-                          issueView !== "spreadsheet" &&
-                          (key === "created_on" || key === "updated_on")
-                        )
-                          return null;
+                          if (
+                            issueView !== "spreadsheet" &&
+                            (key === "created_on" || key === "updated_on")
+                          )
+                            return null;
 
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            className={`rounded border px-2 py-1 text-xs capitalize ${
-                              properties[key as keyof Properties]
-                                ? "border-custom-primary bg-custom-primary text-white"
-                                : "border-custom-border-200"
-                            }`}
-                            onClick={() => setProperties(key as keyof Properties)}
-                          >
-                            {key === "key" ? "ID" : replaceUnderscoreIfSnakeCase(key)}
-                          </button>
-                        );
-                      })}
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              className={`rounded border px-2 py-1 text-xs capitalize ${
+                                properties[key as keyof Properties]
+                                  ? "border-custom-primary bg-custom-primary text-white"
+                                  : "border-custom-border-200"
+                              }`}
+                              onClick={() => setProperties(key as keyof Properties)}
+                            >
+                              {key === "key" ? "ID" : replaceUnderscoreIfSnakeCase(key)}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </Popover.Panel>
             </Transition>

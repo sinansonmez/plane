@@ -32,16 +32,19 @@ export const ViewDueDateSelect: React.FC<Props> = ({
 
   const { issueView } = useIssuesView();
 
+  const minDate = issue.start_date ? new Date(issue.start_date) : null;
+  minDate?.setDate(minDate.getDate());
+
   return (
     <Tooltip
-      tooltipHeading="Due Date"
+      tooltipHeading="Due date"
       tooltipContent={
         issue.target_date ? renderShortDateWithYearFormat(issue.target_date) ?? "N/A" : "N/A"
       }
       position={tooltipPosition}
     >
       <div
-        className={`group relative max-w-[6.5rem] ${
+        className={`group flex-shrink-0 relative max-w-[6.5rem] ${
           issue.target_date === null
             ? ""
             : issue.target_date < new Date().toISOString()
@@ -56,8 +59,6 @@ export const ViewDueDateSelect: React.FC<Props> = ({
             partialUpdateIssue(
               {
                 target_date: val,
-                priority: issue.priority,
-                state: issue.state,
               },
               issue
             );
@@ -77,6 +78,7 @@ export const ViewDueDateSelect: React.FC<Props> = ({
           className={`${issue?.target_date ? "w-[6.5rem]" : "w-[5rem] text-center"} ${
             issueView === "kanban" ? "bg-custom-background-90" : "bg-custom-background-100"
           }`}
+          minDate={minDate ?? undefined}
           noBorder={noBorder}
           disabled={isNotAllowed}
         />

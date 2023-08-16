@@ -227,12 +227,7 @@ export const AnalyticsSidebar: React.FC<Props> = ({
                               </span>
                             ) : project.icon_prop ? (
                               <div className="h-6 w-6 grid place-items-center flex-shrink-0">
-                                <span
-                                  style={{ color: project.icon_prop.color }}
-                                  className="material-symbols-rounded text-lg"
-                                >
-                                  {project.icon_prop.name}
-                                </span>
+                                {renderEmoji(project.icon_prop)}
                               </div>
                             ) : (
                               <span className="grid h-6 w-6 mr-1 flex-shrink-0 place-items-center rounded bg-gray-700 uppercase text-white">
@@ -282,9 +277,7 @@ export const AnalyticsSidebar: React.FC<Props> = ({
                   <div className="space-y-4 mt-4">
                     <div className="flex items-center gap-2 text-xs">
                       <h6 className="text-custom-text-200">Lead</h6>
-                      <span>
-                        {cycleDetails.owned_by?.first_name} {cycleDetails.owned_by?.last_name}
-                      </span>
+                      <span>{cycleDetails.owned_by?.display_name}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <h6 className="text-custom-text-200">Start Date</h6>
@@ -310,10 +303,7 @@ export const AnalyticsSidebar: React.FC<Props> = ({
                   <div className="space-y-4 mt-4">
                     <div className="flex items-center gap-2 text-xs">
                       <h6 className="text-custom-text-200">Lead</h6>
-                      <span>
-                        {moduleDetails.lead_detail?.first_name}{" "}
-                        {moduleDetails.lead_detail?.last_name}
-                      </span>
+                      <span>{moduleDetails.lead_detail?.display_name}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <h6 className="text-custom-text-200">Start Date</h6>
@@ -342,12 +332,7 @@ export const AnalyticsSidebar: React.FC<Props> = ({
                       </div>
                     ) : projectDetails?.icon_prop ? (
                       <div className="h-6 w-6 grid place-items-center flex-shrink-0">
-                        <span
-                          style={{ color: projectDetails.icon_prop.color }}
-                          className="material-symbols-rounded text-lg"
-                        >
-                          {projectDetails.icon_prop.name}
-                        </span>
+                        {renderEmoji(projectDetails.icon_prop)}
                       </div>
                     ) : (
                       <span className="grid h-6 w-6 mr-1 flex-shrink-0 place-items-center rounded bg-gray-700 uppercase text-white">

@@ -29,6 +29,8 @@ import { IModule, SelectModuleType } from "types/modules";
 import type { NextPage } from "next";
 // fetch-keys
 import { MODULE_LIST, PROJECT_DETAILS } from "constants/fetch-keys";
+// helper
+import { truncateText } from "helpers/string.helper";
 
 const ProjectModules: NextPage = () => {
   const [selectedModule, setSelectedModule] = useState<SelectModuleType>();
@@ -48,7 +50,7 @@ const ProjectModules: NextPage = () => {
       : null
   );
 
-  const { data: modules } = useSWR<IModule[]>(
+  const { data: modules, mutate: mutateModules } = useSWR(
     workspaceSlug && projectId ? MODULE_LIST(projectId as string) : null,
     workspaceSlug && projectId
       ? () => modulesService.getModules(workspaceSlug as string, projectId as string)
@@ -73,7 +75,7 @@ const ProjectModules: NextPage = () => {
       breadcrumbs={
         <Breadcrumbs>
           <BreadcrumbItem title="Projects" link={`/${workspaceSlug}/projects`} />
-          <BreadcrumbItem title={`${activeProject?.name ?? "Project"} Modules`} />
+          <BreadcrumbItem title={`${truncateText(activeProject?.name ?? "Project", 32)} Modules`} />
         </Breadcrumbs>
       }
       right={
@@ -137,20 +139,24 @@ const ProjectModules: NextPage = () => {
                 </div>
               </div>
             )}
-            {modulesView === "gantt_chart" && <ModulesListGanttChartView modules={modules} />}
+            {modulesView === "gantt_chart" && (
+              <ModulesListGanttChartView modules={modules} mutateModules={mutateModules} />
+            )}
           </div>
         ) : (
           <EmptyState
             title="Manage your project with modules"
             description="Modules are smaller, focused projects that help you group and organize issues."
             image={emptyModule}
-            buttonText="New Module"
-            buttonIcon={<PlusIcon className="h-4 w-4" />}
-            onClick={() => {
-              const e = new KeyboardEvent("keydown", {
-                key: "m",
-              });
-              document.dispatchEvent(e);
+            primaryButton={{
+              icon: <PlusIcon className="h-4 w-4" />,
+              text: "New Module",
+              onClick: () => {
+                const e = new KeyboardEvent("keydown", {
+                  key: "m",
+                });
+                document.dispatchEvent(e);
+              },
             }}
           />
         )

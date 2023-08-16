@@ -1,3 +1,6 @@
+# Python imports
+from uuid import uuid4
+
 # Django imports
 from django.db import models
 from django.conf import settings
@@ -30,6 +33,10 @@ def get_default_props():
         "groupByProperty": None,
         "showEmptyGroups": True,
     }
+
+
+def get_default_preferences():
+    return {"pages": {"block_display": True}}
 
 
 class Project(BaseModel):
@@ -147,6 +154,20 @@ class ProjectMember(ProjectBaseModel):
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=10)
     view_props = models.JSONField(default=get_default_props)
     default_props = models.JSONField(default=get_default_props)
+    preferences = models.JSONField(default=get_default_preferences)
+    sort_order = models.FloatField(default=65535)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            smallest_sort_order = ProjectMember.objects.filter(
+                workspace_id=self.project.workspace_id, member=self.member
+            ).aggregate(smallest=models.Min("sort_order"))["smallest"]
+
+            # Project ordering
+            if smallest_sort_order is not None:
+                self.sort_order = smallest_sort_order - 10000
+
+        super(ProjectMember, self).save(*args, **kwargs)
 
     class Meta:
         unique_together = ["project", "member"]
@@ -195,3 +216,41 @@ class ProjectFavorite(ProjectBaseModel):
     def __str__(self):
         """Return user of the project"""
         return f"{self.user.email} <{self.project.name}>"
+
+
+def get_anchor():
+    return uuid4().hex
+
+
+def get_default_views():
+    return {
+        "list": True,
+        "kanban": True,
+        "calendar": True,
+        "gantt": True,
+        "spreadsheet": True,
+    }
+
+
+class ProjectDeployBoard(ProjectBaseModel):
+    anchor = models.CharField(
+        max_length=255, default=get_anchor, unique=True, db_index=True
+    )
+    comments = models.BooleanField(default=False)
+    reactions = models.BooleanField(default=False)
+    inbox = models.ForeignKey(
+        "db.Inbox", related_name="bord_inbox", on_delete=models.SET_NULL, null=True
+    )
+    votes = models.BooleanField(default=False)
+    views = models.JSONField(default=get_default_views)
+
+    class Meta:
+        unique_together = ["project", "anchor"]
+        verbose_name = "Project Deploy Board"
+        verbose_name_plural = "Project Deploy Boards"
+        db_table = "project_deploy_boards"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        """Return project and anchor"""
+        return f"{self.anchor} <{self.project.name}>"

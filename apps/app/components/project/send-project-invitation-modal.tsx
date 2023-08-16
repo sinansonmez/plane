@@ -71,7 +71,6 @@ const SendProjectInvitationModal: React.FC<Props> = ({ isOpen, setIsOpen, member
 
   const {
     formState: { errors, isSubmitting },
-
     reset,
     handleSubmit,
     control,
@@ -83,7 +82,7 @@ const SendProjectInvitationModal: React.FC<Props> = ({ isOpen, setIsOpen, member
   });
 
   const uninvitedPeople = people?.filter((person) => {
-    const isInvited = members?.find((member) => member.email === person.member.email);
+    const isInvited = members?.find((member) => member.display_name === person.member.display_name);
     return !isInvited;
   });
 
@@ -94,7 +93,6 @@ const SendProjectInvitationModal: React.FC<Props> = ({ isOpen, setIsOpen, member
       .inviteProject(workspaceSlug as string, projectId as string, payload, user)
       .then(() => {
         setIsOpen(false);
-        mutate(PROJECT_MEMBERS(projectId as string));
         setToastAlert({
           title: "Success",
           type: "success",
@@ -106,6 +104,7 @@ const SendProjectInvitationModal: React.FC<Props> = ({ isOpen, setIsOpen, member
       })
       .finally(() => {
         reset(defaultValues);
+        mutate(PROJECT_MEMBERS(projectId.toString()));
       });
   };
 
@@ -137,11 +136,11 @@ const SendProjectInvitationModal: React.FC<Props> = ({ isOpen, setIsOpen, member
 
   const options = uninvitedPeople?.map((person) => ({
     value: person.member.id,
-    query: person.member.email,
+    query: person.member.display_name,
     content: (
       <div className="flex items-center gap-2">
         <Avatar user={person.member} />
-        {person.member.email}
+        {person.member.display_name}
       </div>
     ),
   }));
@@ -210,7 +209,10 @@ const SendProjectInvitationModal: React.FC<Props> = ({ isOpen, setIsOpen, member
                                               people?.find((p) => p.member.id === value)?.member
                                             }
                                           />
-                                          {people?.find((p) => p.member.id === value)?.member.email}
+                                          {
+                                            people?.find((p) => p.member.id === value)?.member
+                                              .display_name
+                                          }
                                         </div>
                                       ) : (
                                         <div>Select co-worker&rsquo;s email</div>

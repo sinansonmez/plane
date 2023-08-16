@@ -31,6 +31,7 @@ from plane.api.serializers import (
     CycleIssueSerializer,
     CycleFavoriteSerializer,
     IssueStateSerializer,
+    CycleWriteSerializer,
 )
 from plane.api.permissions import ProjectEntityPermission
 from plane.db.models import (
@@ -164,6 +165,9 @@ class CycleViewSet(BaseViewSet):
         try:
             queryset = self.get_queryset()
             cycle_view = request.GET.get("cycle_view", "all")
+            order_by = request.GET.get("order_by", "sort_order")
+
+            queryset = queryset.order_by(order_by)
 
             # All Cycles
             if cycle_view == "all":
@@ -338,7 +342,7 @@ class CycleViewSet(BaseViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            serializer = CycleSerializer(cycle, data=request.data, partial=True)
+            serializer = CycleWriteSerializer(cycle, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -369,7 +373,8 @@ class CycleViewSet(BaseViewSet):
                 .annotate(last_name=F("assignees__last_name"))
                 .annotate(assignee_id=F("assignees__id"))
                 .annotate(avatar=F("assignees__avatar"))
-                .values("first_name", "last_name", "assignee_id", "avatar")
+                .annotate(display_name=F("assignees__display_name"))
+                .values("first_name", "last_name", "assignee_id", "avatar", "display_name")
                 .annotate(total_issues=Count("assignee_id"))
                 .annotate(
                     completed_issues=Count(
@@ -691,7 +696,6 @@ class CycleDateCheckEndpoint(BaseAPIView):
                 return Response(
                     {
                         "error": "You have a cycle already on the given dates, if you want to create your draft cycle you can do that by removing dates",
-                        "cycles": CycleSerializer(cycles, many=True).data,
                         "status": False,
                     }
                 )

@@ -18,6 +18,7 @@ from .project import (
     ProjectMemberInvite,
     ProjectIdentifier,
     ProjectFavorite,
+    ProjectDeployBoard,
 )
 
 from .issue import (
@@ -34,6 +35,9 @@ from .issue import (
     IssueSequence,
     IssueAttachment,
     IssueSubscriber,
+    IssueReaction,
+    CommentReaction,
+    IssueVote,
 )
 
 from .asset import FileAsset
@@ -71,3 +75,5 @@ from .inbox import Inbox, InboxIssue
 from .analytic import AnalyticView
 
 from .notification import Notification
+
+from .exporter import ExporterHistory

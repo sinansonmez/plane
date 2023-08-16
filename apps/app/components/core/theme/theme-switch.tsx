@@ -1,43 +1,44 @@
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
-
+// next-themes
 import { useTheme } from "next-themes";
-
+// hooks
+import useUser from "hooks/use-user";
 // constants
 import { THEMES_OBJ } from "constants/themes";
 // ui
 import { CustomSelect } from "components/ui";
 // types
-import { ICustomTheme, IUser } from "types";
+import { ICustomTheme } from "types";
+import { unsetCustomCssVariables } from "helpers/theme.helper";
+// mobx react lite
+import { observer } from "mobx-react-lite";
+// mobx store
+import { useMobxStore } from "lib/mobx/store-provider";
 
 type Props = {
-  user: IUser | undefined;
-  setPreLoadedData: Dispatch<SetStateAction<ICustomTheme | null>>;
+  setPreLoadedData: React.Dispatch<React.SetStateAction<ICustomTheme | null>>;
   customThemeSelectorOptions: boolean;
-  setCustomThemeSelectorOptions: Dispatch<SetStateAction<boolean>>;
+  setCustomThemeSelectorOptions: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const ThemeSwitch: React.FC<Props> = ({
-  user,
-  setPreLoadedData,
-  customThemeSelectorOptions,
-  setCustomThemeSelectorOptions,
-}) => {
-  const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+export const ThemeSwitch: React.FC<Props> = observer(
+  ({ setPreLoadedData, customThemeSelectorOptions, setCustomThemeSelectorOptions }) => {
+    const store: any = useMobxStore();
 
-  // useEffect only runs on the client, so now we can safely show the UI
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+    const { user, mutateUser } = useUser();
+    const { theme, setTheme } = useTheme();
 
-  if (!mounted) {
-    return null;
-  }
+    const updateUserTheme = (newTheme: string) => {
+      if (!user) return;
+      setTheme(newTheme);
+      return store.user
+        .updateCurrentUserSettings({ theme: { ...user.theme, theme: newTheme } })
+        .then((response: any) => response)
+        .catch((error: any) => error);
+    };
 
-  const currentThemeObj = THEMES_OBJ.find((t) => t.value === theme);
+    const currentThemeObj = THEMES_OBJ.find((t) => t.value === theme);
 
-  return (
-    <>
+    return (
       <CustomSelect
         value={theme}
         label={
@@ -84,26 +85,18 @@ export const ThemeSwitch: React.FC<Props> = ({
                   user.theme.palette !== ",,,,"
                     ? user.theme.palette
                     : "#0d101b,#c5c5c5,#3f76ff,#0d101b,#c5c5c5",
+                theme: "custom",
               });
             }
 
             if (!customThemeSelectorOptions) setCustomThemeSelectorOptions(true);
           } else {
             if (customThemeSelectorOptions) setCustomThemeSelectorOptions(false);
-
-            for (let i = 10; i <= 900; i >= 100 ? (i += 100) : (i += 10)) {
-              document.documentElement.style.removeProperty(`--color-background-${i}`);
-              document.documentElement.style.removeProperty(`--color-text-${i}`);
-              document.documentElement.style.removeProperty(`--color-border-${i}`);
-              document.documentElement.style.removeProperty(`--color-primary-${i}`);
-              document.documentElement.style.removeProperty(`--color-sidebar-background-${i}`);
-              document.documentElement.style.removeProperty(`--color-sidebar-text-${i}`);
-              document.documentElement.style.removeProperty(`--color-sidebar-border-${i}`);
-            }
+            unsetCustomCssVariables();
           }
 
-          setTheme(value);
-          document.documentElement.style.setProperty("color-scheme", type);
+          updateUserTheme(value);
+          document.documentElement.style.setProperty("--color-scheme", type);
         }}
         input
         width="w-full"
@@ -137,6 +130,6 @@ export const ThemeSwitch: React.FC<Props> = ({
           </CustomSelect.Option>
         ))}
       </CustomSelect>
-    </>
-  );
-};
+    );
+  }
+);

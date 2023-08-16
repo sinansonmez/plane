@@ -43,8 +43,12 @@ export const ImageUploadModal: React.FC<Props> = ({
     setImage(acceptedFiles[0]);
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,
+    accept: {
+      "image/*": [".png", ".jpg", ".jpeg", ".svg", ".webp"],
+    },
+    maxSize: 5 * 1024 * 1024,
   });
 
   const handleSubmit = async () => {
@@ -127,10 +131,10 @@ export const ImageUploadModal: React.FC<Props> = ({
                     Upload Image
                   </Dialog.Title>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center gap-3">
                       <div
                         {...getRootProps()}
-                        className={`relative grid h-80 w-full cursor-pointer place-items-center rounded-lg p-12 text-center focus:outline-none focus:ring-2 focus:ring-custom-primary focus:ring-offset-2 ${
+                        className={`relative grid h-80 w-80 cursor-pointer place-items-center rounded-lg p-12 text-center focus:outline-none focus:ring-2 focus:ring-custom-primary focus:ring-offset-2 ${
                           (image === null && isDragActive) || !value
                             ? "border-2 border-dashed border-custom-border-200 hover:bg-custom-background-90"
                             : ""
@@ -166,9 +170,19 @@ export const ImageUploadModal: React.FC<Props> = ({
                         <input {...getInputProps()} type="text" />
                       </div>
                     </div>
+                    {fileRejections.length > 0 && (
+                      <p className="text-sm text-red-500">
+                        {fileRejections[0].errors[0].code === "file-too-large"
+                          ? "The image size cannot exceed 5 MB."
+                          : "Please upload a file in a valid format."}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                <p className="my-4 text-custom-text-200 text-sm">
+                  File formats supported- .jpeg, .jpg, .png, .webp, .svg
+                </p>
+                <div className="flex items-center justify-end gap-2">
                   <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
                   <PrimaryButton
                     onClick={handleSubmit}

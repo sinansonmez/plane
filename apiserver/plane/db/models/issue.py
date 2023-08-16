@@ -108,11 +108,7 @@ class Issue(ProjectBaseModel):
                         ~models.Q(name="Triage"), project=self.project
                     ).first()
                     self.state = random_state
-                    if random_state.group == "started":
-                        self.start_date = timezone.now().date()
                 else:
-                    if default_state.group == "started":
-                        self.start_date = timezone.now().date()
                     self.state = default_state
             except ImportError:
                 pass
@@ -127,8 +123,6 @@ class Issue(ProjectBaseModel):
                     PageBlock.objects.filter(issue_id=self.id).filter().update(
                         completed_at=timezone.now()
                     )
-                elif self.state.group == "started":
-                    self.start_date = timezone.now().date()
                 else:
                     PageBlock.objects.filter(issue_id=self.id).filter().update(
                         completed_at=None
@@ -153,9 +147,6 @@ class Issue(ProjectBaseModel):
             if largest_sort_order is not None:
                 self.sort_order = largest_sort_order + 10000
 
-            # If adding it to started state
-            if self.state.group == "started":
-                self.start_date = timezone.now().date()
         # Strip the html tags using html parser
         self.description_stripped = (
             None
@@ -209,7 +200,7 @@ class IssueAssignee(ProjectBaseModel):
 
 
 class IssueLink(ProjectBaseModel):
-    title = models.CharField(max_length=255, null=True)
+    title = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField()
     issue = models.ForeignKey(
         "db.Issue", on_delete=models.CASCADE, related_name="issue_link"
@@ -309,6 +300,14 @@ class IssueComment(ProjectBaseModel):
         on_delete=models.CASCADE,
         related_name="comments",
         null=True,
+    )
+    access = models.CharField(
+        choices=(
+            ("INTERNAL", "INTERNAL"),
+            ("EXTERNAL", "EXTERNAL"),
+        ),
+        default="INTERNAL",
+        max_length=100,
     )
 
     def save(self, *args, **kwargs):
@@ -422,6 +421,72 @@ class IssueSubscriber(ProjectBaseModel):
 
     def __str__(self):
         return f"{self.issue.name} {self.subscriber.email}"
+
+
+class IssueReaction(ProjectBaseModel):
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="issue_reactions",
+    )
+    issue = models.ForeignKey(
+        Issue, on_delete=models.CASCADE, related_name="issue_reactions"
+    )
+    reaction = models.CharField(max_length=20)
+
+    class Meta:
+        unique_together = ["issue", "actor", "reaction"]
+        verbose_name = "Issue Reaction"
+        verbose_name_plural = "Issue Reactions"
+        db_table = "issue_reactions"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.issue.name} {self.actor.email}"
+
+
+class CommentReaction(ProjectBaseModel):
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="comment_reactions",
+    )
+    comment = models.ForeignKey(
+        IssueComment, on_delete=models.CASCADE, related_name="comment_reactions"
+    )
+    reaction = models.CharField(max_length=20)
+
+    class Meta:
+        unique_together = ["comment", "actor", "reaction"]
+        verbose_name = "Comment Reaction"
+        verbose_name_plural = "Comment Reactions"
+        db_table = "comment_reactions"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.issue.name} {self.actor.email}"
+
+
+class IssueVote(ProjectBaseModel):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="votes")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="votes"
+    )
+    vote = models.IntegerField(
+        choices=(
+            (-1, "DOWNVOTE"),
+            (1, "UPVOTE"),
+        )
+    )
+    class Meta:
+        unique_together = ["issue", "actor"]
+        verbose_name = "Issue Vote"
+        verbose_name_plural = "Issue Votes"
+        db_table = "issue_votes"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.issue.name} {self.actor.email}"
 
 
 # TODO: Find a better method to save the model
