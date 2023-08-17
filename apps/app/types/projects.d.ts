@@ -66,13 +66,15 @@ export interface IProjectLite {
   identifier: string;
 }
 
-type ProjectViewTheme = {
-  issueView: TIssueViewOptions;
-  groupByProperty: TIssueGroupByOptions;
-  orderBy: TIssueOrderByOptions;
+export interface IProjectViewProps {
   calendarDateRange: string;
   filters: IIssueFilterOptions;
-};
+  groupByProperty: TIssueGroupByOptions;
+  issueView: TIssueViewOptions;
+  orderBy: TIssueOrderByOptions;
+  showEmptyGroups: boolean;
+  showSubIssues: boolean;
+}
 
 type ProjectPreferences = {
   pages: {
@@ -90,8 +92,8 @@ export interface IProjectMember {
 
   preferences: ProjectPreferences;
 
-  view_props: ProjectViewTheme;
-  default_props: ProjectViewTheme;
+  view_props: IProjectViewProps;
+  default_props: IProjectViewProps;
 
   created_at: Date;
   updated_at: Date;

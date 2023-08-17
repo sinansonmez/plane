@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import { useRouter } from "next/router";
 
+// mobx
+import { observer } from "mobx-react-lite";
 // headless ui
 import { Popover, Transition } from "@headlessui/react";
 // hooks
@@ -28,6 +30,7 @@ import { checkIfArraysHaveSameElements } from "helpers/array.helper";
 import { Properties, TIssueViewOptions } from "types";
 // constants
 import { GROUP_BY_OPTIONS, ORDER_BY_OPTIONS, FILTER_ISSUE_OPTIONS } from "constants/issue";
+import { useMobxStore } from "lib/mobx/store-provider";
 
 const issueViewOptions: { type: TIssueViewOptions; Icon: any }[] = [
   {
@@ -52,14 +55,12 @@ const issueViewOptions: { type: TIssueViewOptions; Icon: any }[] = [
   },
 ];
 
-export const IssuesFilterView: React.FC = () => {
+export const IssuesFilterView: React.FC = observer(() => {
   const router = useRouter();
   const { workspaceSlug, projectId, viewId } = router.query;
   const isArchivedIssues = router.pathname.includes("archived-issues");
 
   const {
-    issueView,
-    setIssueView,
     groupByProperty,
     setGroupByProperty,
     orderBy,
@@ -74,12 +75,30 @@ export const IssuesFilterView: React.FC = () => {
     setNewFilterDefaultView,
   } = useIssuesView();
 
+  const { projectViewProps } = useMobxStore();
+
+  const { viewProps, loadViewProps, updateViewProps } = projectViewProps;
+  const { issueView } = viewProps;
+
   const [properties, setProperties] = useIssuesProperties(
     workspaceSlug as string,
     projectId as string
   );
 
   const { isEstimateActive } = useEstimateOption();
+
+  const setIssueView = (issueView: TIssueViewOptions) => {
+    if (!workspaceSlug || !projectId) return;
+
+    updateViewProps(workspaceSlug.toString(), projectId.toString(), {
+      ...viewProps,
+      issueView,
+    });
+  };
+
+  useEffect(() => {
+    if (workspaceSlug && projectId) loadViewProps(workspaceSlug.toString(), projectId.toString());
+  }, [loadViewProps, projectId, workspaceSlug]);
 
   return (
     <div className="flex items-center gap-2">
@@ -354,4 +373,4 @@ export const IssuesFilterView: React.FC = () => {
       </Popover>
     </div>
   );
-};
+});
