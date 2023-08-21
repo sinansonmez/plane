@@ -51,9 +51,8 @@ export const CustomSearchSelect = ({
 }: CustomSearchSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const dropdownContainer = useRef<any>(null);
-  const dropdownOptions = useRef<any>(null);
   const dropdownBtn = useRef<any>(null);
+  const dropdownOptions = useRef<any>(null);
 
   const [query, setQuery] = useState("");
 
@@ -71,16 +70,17 @@ export const CustomSearchSelect = ({
   if (multiple) props.multiple = true;
 
   const handleOnOpen = () => {
-    const dropdownContainerRef = dropdownContainer.current;
     const dropdownOptionsRef = dropdownOptions.current;
     const dropdownBtnRef = dropdownBtn.current;
 
-    const dropdownWidth = dropdownOptionsRef?.clientWidth || 225;
-    const dropdownHeight = dropdownOptionsRef?.clientHeight || 206;
+    if (!dropdownOptionsRef || !dropdownBtnRef) return;
 
-    const dropdownBtnX = dropdownBtnRef.getBoundingClientRect().x || 0;
-    const dropdownBtnY = dropdownBtnRef.getBoundingClientRect().y || 0;
-    const dropdownBtnHeight = dropdownBtnRef?.clientHeight || 32;
+    const dropdownWidth = dropdownOptionsRef.clientWidth;
+    const dropdownHeight = dropdownOptionsRef.clientHeight;
+
+    const dropdownBtnX = dropdownBtnRef.getBoundingClientRect().x;
+    const dropdownBtnY = dropdownBtnRef.getBoundingClientRect().y;
+    const dropdownBtnHeight = dropdownBtnRef.clientHeight;
 
     let top = dropdownBtnY + dropdownBtnHeight;
     if (dropdownBtnY + dropdownHeight > window.innerHeight)
@@ -89,10 +89,8 @@ export const CustomSearchSelect = ({
     let left = dropdownBtnX;
     if (dropdownBtnX + dropdownWidth > window.innerWidth) left = dropdownBtnX - dropdownWidth;
 
-    if (dropdownContainerRef) {
-      dropdownContainerRef.style.top = `${Math.round(top)}px`;
-      dropdownContainerRef.style.left = `${Math.round(left)}px`;
-    }
+    dropdownOptionsRef.style.top = `${Math.round(top)}px`;
+    dropdownOptionsRef.style.left = `${Math.round(left)}px`;
   };
 
   useOutsideClickDetector(dropdownOptions, () => {
@@ -141,7 +139,7 @@ export const CustomSearchSelect = ({
               leaveFrom="opacity-100 translate-y-0"
               leaveTo="opacity-0 translate-y-1"
             >
-              <div ref={dropdownContainer} className={`fixed z-20 h-full w-full`}>
+              <div className="fixed z-20 top-0 left-0 h-full w-full cursor-auto">
                 <Combobox.Options
                   ref={dropdownOptions}
                   className={`fixed z-10 min-w-[10rem] border border-custom-border-300 p-2 rounded-md bg-custom-background-90 text-xs shadow-lg focus:outline-none   ${
