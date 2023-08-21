@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // headless ui
 import { Combobox, Transition } from "@headlessui/react";
+// hooks
+import useOutsideClickDetector from "hooks/use-outside-click-detector";
 // icons
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
@@ -47,6 +49,12 @@ export const CustomSearchSelect = ({
   verticalPosition = "bottom",
   width = "auto",
 }: CustomSearchSelectProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const dropdownContainer = useRef<any>(null);
+  const dropdownOptions = useRef<any>(null);
+  const dropdownBtn = useRef<any>(null);
+
   const [query, setQuery] = useState("");
 
   const filteredOptions =
@@ -62,21 +70,52 @@ export const CustomSearchSelect = ({
 
   if (multiple) props.multiple = true;
 
+  const handleOnOpen = () => {
+    const dropdownContainerRef = dropdownContainer.current;
+    const dropdownOptionsRef = dropdownOptions.current;
+    const dropdownBtnRef = dropdownBtn.current;
+
+    const dropdownWidth = dropdownOptionsRef?.clientWidth || 225;
+    const dropdownHeight = dropdownOptionsRef?.clientHeight || 206;
+
+    const dropdownBtnX = dropdownBtnRef.getBoundingClientRect().x || 0;
+    const dropdownBtnY = dropdownBtnRef.getBoundingClientRect().y || 0;
+    const dropdownBtnHeight = dropdownBtnRef?.clientHeight || 32;
+
+    let top = dropdownBtnY + dropdownBtnHeight;
+    if (dropdownBtnY + dropdownHeight > window.innerHeight)
+      top = dropdownBtnY - dropdownHeight - 10;
+
+    let left = dropdownBtnX;
+    if (dropdownBtnX + dropdownWidth > window.innerWidth) left = dropdownBtnX - dropdownWidth;
+
+    if (dropdownContainerRef) {
+      dropdownContainerRef.style.top = `${Math.round(top)}px`;
+      dropdownContainerRef.style.left = `${Math.round(left)}px`;
+    }
+  };
+
+  useOutsideClickDetector(dropdownOptions, () => {
+    if (isOpen) setIsOpen(false);
+  });
+
   return (
-    <Combobox
-      as="div"
-      className={`${selfPositioned ? "" : "relative"} flex-shrink-0 text-left ${className}`}
-      {...props}
-    >
+    <Combobox as="div" className={`relative flex-shrink-0 text-left ${className}`} {...props}>
       {({ open }: { open: boolean }) => {
-        if (open && onOpen) onOpen();
+        if (open) {
+          handleOnOpen();
+          if (onOpen) onOpen();
+        }
 
         return (
           <>
             {customButton ? (
-              <Combobox.Button as="div">{customButton}</Combobox.Button>
+              <Combobox.Button as="div" ref={dropdownBtn}>
+                {customButton}
+              </Combobox.Button>
             ) : (
               <Combobox.Button
+                ref={dropdownBtn}
                 type="button"
                 className={`flex items-center justify-between gap-1 w-full rounded-md shadow-sm border border-custom-border-300 duration-300 focus:outline-none ${
                   input ? "px-3 py-2 text-sm" : "px-2.5 py-1 text-xs"
@@ -102,81 +141,84 @@ export const CustomSearchSelect = ({
               leaveFrom="opacity-100 translate-y-0"
               leaveTo="opacity-0 translate-y-1"
             >
-              <Combobox.Options
-                className={`absolute z-10 min-w-[10rem] border border-custom-border-300 p-2 rounded-md bg-custom-background-90 text-xs shadow-lg focus:outline-none ${
-                  position === "left" ? "left-0 origin-top-left" : "right-0 origin-top-right"
-                } ${verticalPosition === "top" ? "bottom-full mb-1" : "mt-1"} ${
-                  width === "auto" ? "min-w-[8rem] whitespace-nowrap" : width
-                } ${optionsClassName}`}
-              >
-                <div className="flex w-full items-center justify-start rounded-sm border-[0.6px] border-custom-border-200 bg-custom-background-90 px-2">
-                  <MagnifyingGlassIcon className="h-3 w-3 text-custom-text-200" />
-                  <Combobox.Input
-                    className="w-full bg-transparent py-1 px-2 text-xs text-custom-text-200 placeholder:text-custom-text-400 focus:outline-none"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Type to search..."
-                    displayValue={(assigned: any) => assigned?.name}
-                  />
-                </div>
-                <div
-                  className={`mt-2 space-y-1 ${
-                    maxHeight === "lg"
-                      ? "max-h-60"
-                      : maxHeight === "md"
-                      ? "max-h-48"
-                      : maxHeight === "rg"
-                      ? "max-h-36"
-                      : maxHeight === "sm"
-                      ? "max-h-28"
-                      : ""
-                  } overflow-y-scroll`}
+              <div ref={dropdownContainer} className={`fixed z-20 h-full w-full`}>
+                <Combobox.Options
+                  ref={dropdownOptions}
+                  className={`fixed z-10 min-w-[10rem] border border-custom-border-300 p-2 rounded-md bg-custom-background-90 text-xs shadow-lg focus:outline-none   ${
+                    width === "auto" ? "min-w-[8rem] whitespace-nowrap" : width
+                  } ${optionsClassName}`}
                 >
-                  {filteredOptions ? (
-                    filteredOptions.length > 0 ? (
-                      filteredOptions.map((option) => (
-                        <Combobox.Option
-                          key={option.value}
-                          value={option.value}
-                          className={({ active, selected }) =>
-                            `flex items-center justify-between gap-2 cursor-pointer select-none truncate rounded px-1 py-1.5 ${
-                              active || selected ? "bg-custom-background-80" : ""
-                            } ${selected ? "text-custom-text-100" : "text-custom-text-200"}`
-                          }
-                        >
-                          {({ active, selected }) => (
-                            <>
-                              {option.content}
-                              {multiple ? (
-                                <div
-                                  className={`flex items-center justify-center rounded border border-custom-border-400 p-0.5 ${
-                                    active || selected ? "opacity-100" : "opacity-0"
-                                  }`}
-                                >
+                  <div className="flex w-full items-center justify-start rounded-sm border-[0.6px] border-custom-border-200 bg-custom-background-90 px-2">
+                    <MagnifyingGlassIcon className="h-3 w-3 text-custom-text-200" />
+                    <Combobox.Input
+                      className="w-full bg-transparent py-1 px-2 text-xs text-custom-text-200 placeholder:text-custom-text-400 focus:outline-none"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Type to search..."
+                      displayValue={(assigned: any) => assigned?.name}
+                    />
+                  </div>
+                  <div
+                    className={`mt-2 space-y-1 ${
+                      maxHeight === "lg"
+                        ? "max-h-60"
+                        : maxHeight === "md"
+                        ? "max-h-48"
+                        : maxHeight === "rg"
+                        ? "max-h-36"
+                        : maxHeight === "sm"
+                        ? "max-h-28"
+                        : ""
+                    } overflow-y-scroll`}
+                  >
+                    {filteredOptions ? (
+                      filteredOptions.length > 0 ? (
+                        filteredOptions.map((option) => (
+                          <Combobox.Option
+                            key={option.value}
+                            value={option.value}
+                            className={({ active, selected }) =>
+                              `flex items-center justify-between gap-2 cursor-pointer select-none truncate rounded px-1 py-1.5 ${
+                                active || selected ? "bg-custom-background-80" : ""
+                              } ${selected ? "text-custom-text-100" : "text-custom-text-200"}`
+                            }
+                          >
+                            {({ active, selected }) => (
+                              <>
+                                {option.content}
+                                {multiple ? (
+                                  <div
+                                    className={`flex items-center justify-center rounded border border-custom-border-400 p-0.5 ${
+                                      active || selected ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  >
+                                    <CheckIcon
+                                      className={`h-3 w-3 ${
+                                        selected ? "opacity-100" : "opacity-0"
+                                      }`}
+                                    />
+                                  </div>
+                                ) : (
                                   <CheckIcon
                                     className={`h-3 w-3 ${selected ? "opacity-100" : "opacity-0"}`}
                                   />
-                                </div>
-                              ) : (
-                                <CheckIcon
-                                  className={`h-3 w-3 ${selected ? "opacity-100" : "opacity-0"}`}
-                                />
-                              )}
-                            </>
-                          )}
-                        </Combobox.Option>
-                      ))
+                                )}
+                              </>
+                            )}
+                          </Combobox.Option>
+                        ))
+                      ) : (
+                        <span className="flex items-center gap-2 p-1">
+                          <p className="text-left text-custom-text-200 ">No matching results</p>
+                        </span>
+                      )
                     ) : (
-                      <span className="flex items-center gap-2 p-1">
-                        <p className="text-left text-custom-text-200 ">No matching results</p>
-                      </span>
-                    )
-                  ) : (
-                    <p className="text-center text-custom-text-200">Loading...</p>
-                  )}
-                </div>
-                {footerOption}
-              </Combobox.Options>
+                      <p className="text-center text-custom-text-200">Loading...</p>
+                    )}
+                  </div>
+                  {footerOption}
+                </Combobox.Options>
+              </div>
             </Transition>
           </>
         );
