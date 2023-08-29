@@ -98,6 +98,7 @@ const WorkspacePage: NextPage = () => {
           </Link>
         </div>
       }
+      bg="secondary"
     >
       {isProductUpdatesModalOpen && (
         <ProductUpdatesModal

@@ -91,6 +91,7 @@ const Analytics = () => {
           <BreadcrumbItem title="Workspace Analytics" />
         </Breadcrumbs>
       }
+      bg="secondary"
     >
       {projects ? (
         projects.length > 0 ? (

@@ -65,8 +65,8 @@ const ProfilePreferences = observer(() => {
         <div className="p-8">
           <div className="mb-8 space-y-6">
             <div>
-              <h3 className="text-3xl font-semibold">Profile Settings</h3>
-              <p className="mt-1 text-custom-text-200">
+              <h3 className="text-2xl font-semibold">Profile Settings</h3>
+              <p className="mt-1 text-sm text-custom-text-200">
                 This information will be visible to only you.
               </p>
             </div>

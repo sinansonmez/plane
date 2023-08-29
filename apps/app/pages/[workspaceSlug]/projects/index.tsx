@@ -89,6 +89,7 @@ const ProjectsPage: NextPage = () => {
           </PrimaryButton>
         </div>
       }
+      bg="secondary"
     >
       <JoinProjectModal
         data={projects?.find((item) => item.id === selectedProjectToJoin)}
