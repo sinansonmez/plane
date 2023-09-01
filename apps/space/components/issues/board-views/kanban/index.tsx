@@ -10,6 +10,8 @@ import { IIssueState, IIssue } from "types/issue";
 // mobx hook
 import { useMobxStore } from "lib/mobx/store-provider";
 import { RootStore } from "store/root";
+// ui
+import { Icon } from "components/ui";
 
 export const IssueKanbanView = observer(() => {
   const store: RootStore = useMobxStore();
@@ -32,8 +34,9 @@ export const IssueKanbanView = observer(() => {
                   ))}
                 </div>
               ) : (
-                <div className="relative w-full h-full flex justify-center items-center p-10 text-center text-sm text-custom-text-200">
-                  No Issues are available.
+                <div className="text-center text-sm font-medium text-custom-text-400 pt-7 flex items-center justify-center gap-1">
+                  <Icon iconName="stack" className="!-mt-0.5" />
+                  No issues in this state
                 </div>
               )}
             </div>
