@@ -1,0 +1,19 @@
+ports:
+  - port: 8000
+    description: for server
+    onOpen: notify
+  - port: 3000
+    description: for FE
+    onOpen: open-browser
+    visibility: public
+  - port: 80
+    onOpen: ignore
+
+tasks:
+  - name: Server
+    before: |
+      export NEXT_PUBLIC_API_BASE_URL=$(gp url 8000)
+    init: |
+      chmod +x setup.sh
+      ./setup.sh http://localhost
+      docker compose up -d
