@@ -1,17 +1,11 @@
 ports:
-  - port: 8000
-    description: for server
-    onOpen: notify
-  - port: 3000
-    description: for FE
+  - port: 80
     onOpen: open-browser
     visibility: public
-  - port: 80
-    onOpen: ignore
 
 tasks:
   - name: Server
     init: |
       chmod +x setup.sh
-      ./setup.sh $(gp url 8000)
+      ./setup.sh $(gp url 80)
       docker compose up -d
